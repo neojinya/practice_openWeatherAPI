@@ -1,4 +1,17 @@
 
+// 既存の fetch コードはそのままでOK（内部で自動リトライされる）
+// 即時実行async関数（IIFE）でラップする
+// (async () => {
+//     try {
+//       const res = await fetch('/api/weather?city=Tokyo');
+//       const data = await res.json();
+//     //   console.log("テスト取得:", data);
+//     } catch (err) {
+//     //   console.error("fetch失敗:", err);
+//     }
+//   })();
+  
+
 const cards = document.querySelector('.cards_wrap')
 
 const renderError = function(err){
