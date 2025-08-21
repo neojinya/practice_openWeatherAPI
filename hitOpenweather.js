@@ -89,6 +89,33 @@ function renderCard(key, data) {
 // ここでは「現在地」ボタンを押したあとに最新の座標を使って更新する例
 let lastLatLng = null;
 
+// --- ページ読み込み時：現在地の天気を表示（以後は setInterval が自動更新） ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Geolocationは https or localhost でのみ動作する点に注意
+    if (!navigator.geolocation) {
+      // 位置情報が使えない場合は東京をデフォルト表示に
+      getGeo('東京');                    // ← 日本語住所のままでOK（GSI APIを利用）
+      return;
+    }
+  
+    cards.style.opacity = 0.5;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        getWeather([lon, lat]);          // ← ここで lastLatLng もセットされる
+      },
+      (err) => {
+        // 拒否や失敗時は東京にフォールバック
+        renderError(`位置情報エラー: ${err.message}（東京を表示します）`);
+        getGeo('東京');
+        cards.style.opacity = 1;
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+  
+
 
 let getWeather = function(latlng) {
     lastLatLng = latlng;
@@ -172,7 +199,7 @@ document.getElementById('currentBtn').addEventListener('click', (e) => {
 
 // 30分ごとに再取得
 setInterval(() => {
-    console.log("せtInterval関数が作動");
+    console.log("tInterval関数が作動");
   if (lastLatLng) getWeather(lastLatLng);
 }, 10 * 1000);
 
