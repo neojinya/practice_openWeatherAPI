@@ -59,8 +59,12 @@ const renderCard = function(data) {
         cards.insertAdjacentHTML('beforeend', html)
 }
 
+  // 東京などの最後に検索した地名を使う場合は getGeo() を呼ぶ
+// ここでは「現在地」ボタンを押したあとに最新の座標を使って更新する例
+let lastLatLng = null;
 
-const getWeather = function(latlng) {
+
+let getWeather = function(latlng) {
     fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latlng[1]}&lon=${latlng[0]}&units=metric&appid=dbb8018c14b7dce1b5fdba7520951c60`)
     .then(response => {
         console.log(response)
@@ -94,6 +98,13 @@ const getWeather = function(latlng) {
         cards.style.opacity = 1;
     }) 
 }
+
+// getWeather の直前で記録（getWeather の最初の行に置いてもOK）
+const _origGetWeather = getWeather;
+getWeather = function(latlng) {
+  lastLatLng = latlng;
+  return _origGetWeather(latlng);
+};
 
 
 const getGeo = function(geo) {
@@ -137,4 +148,15 @@ document.getElementById('currentBtn').addEventListener('click', (e) => {
       { enableHighAccuracy: true, timeout: 8000 }
     );
   });
+
+
+
+
+
+// 30分ごとに再取得
+setInterval(() => {
+    console.log("動作");
+  if (lastLatLng) getWeather(lastLatLng);
+}, 10 * 1000);
+
   
