@@ -42,6 +42,7 @@ function renderCard(key, data) {
       // --- 新規作成（最小の骨組みだけ） ---
       const html = `
         <div class="card" data-key="${key}">
+        <button class="close-btn">×</button>
           <div class="card__title city"></div>
           <ul class="card__list">
             <li class="card__list__item">
@@ -83,6 +84,8 @@ function renderCard(key, data) {
       iconEl.src = `https://openweathermap.org/img/w/${data.weather?.[0]?.icon}.png`; // ← https
       iconEl.alt = data.weather?.[0]?.description || data.weather?.[0]?.main || 'weather';
     }
+    card.querySelector('.close-btn').onclick = () => card.remove();
+
   }
   
   // 東京などの最後に検索した地名を使う場合は getGeo() を呼ぶ
