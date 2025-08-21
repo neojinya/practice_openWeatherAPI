@@ -10,6 +10,21 @@
 //     //   console.error("fetch失敗:", err);
 //     }
 //   })();
+
+// 座標をキー化（小数4桁で丸めて同一判定を安定させる）
+function coordKey(lon, lat) {
+    return `${Number(lon).toFixed(4)},${Number(lat).toFixed(4)}`;
+  }
+  
+  // UNIX秒 → HH:MM:SS
+  function formatTime(ts) {
+    const d = new Date(ts * 1000);
+    const hh = `0${d.getHours()}`.slice(-2);
+    const mm = `0${d.getMinutes()}`.slice(-2);
+    const ss = `0${d.getSeconds()}`.slice(-2);
+    return `${hh}:${mm}:${ss}`;
+  }
+  
   
 
 const cards = document.querySelector('.cards_wrap')
@@ -18,53 +33,66 @@ const renderError = function(err){
     cards.insertAdjacentHTML('beforeend', err)
 }
 
-const renderCard = function(data) {
-    const getTime = function(timestanp) {
-        const date = new Date(timestanp * 1000);
-        const hh = `0${date.getHours()}`.slice(-2);
-        const mm = `0${date.getMinutes()}`.slice(-2);
-        const ss = `0${date.getSeconds()}`.slice(-2);
-        return `${hh}:${mm}:${ss}`
+// 同じ場所のカードがあれば更新、無ければ追加
+function renderCard(key, data) {
+    // 既存カードを探す（data-key で一意化）
+    let card = document.querySelector(`.card[data-key="${key}"]`);
+  
+    if (!card) {
+      // --- 新規作成（最小の骨組みだけ） ---
+      const html = `
+        <div class="card" data-key="${key}">
+          <div class="card__title city"></div>
+          <ul class="card__list">
+            <li class="card__list__item">
+              <span class="ttl"><img class="icon" src="" alt="weather"></span>
+              <span class="data weather"></span>
+            </li>
+            <li class="card__list__item">
+              <span class="ttl">🌡</span>
+              <span class="data temp"></span>
+            </li>
+            <li class="card__list__item">
+              <span class="ttl">🌪</span>
+              <span class="data wind"></span>
+            </li>
+            <li class="card__list__item">
+              <span class="ttl">🌅</span>
+              <span class="data sunrise"></span>
+            </li>
+            <li class="card__list__item">
+              <span class="ttl">🌇</span>
+              <span class="data sunset"></span>
+            </li>
+          </ul>
+        </div>`;
+      cards.insertAdjacentHTML('beforeend', html);
+      card = document.querySelector(`.card[data-key="${key}"]`);
     }
-    const html = `
-            <div class="card">
-                <div class="card__title">${data.name}</div>
-                <ul class="card__list">
-                <li class="card__list__item">
-                    <span class="ttl"><img id="weatherImg01" src=""></span>
-                    <span class="data">
-                        ${data.weather[0].main}
-                    </span>
-                </li>
-                <li class="card__list__item">
-                    <span class="ttl">🌡</span>
-                    <span class="data">${data.main.temp}℃</span>
-                </li>
-                <li class="card__list__item">
-                    <span class="ttl">🌪</span>
-                    <span class="data">${data.wind.speed.toFixed(1)}M</span>
-                </li>
-                <li class="card__list__item">
-                    <span class="ttl">🌅</span>
-                    <span class="data">${getTime(data.sys.sunrise)}</span>
-                </li>
-                <li class="card__list__item">
-                    <span class="ttl">🌇</span>
-                    <span class="data">${getTime(data.sys.sunset)}</span>
-                </li>
-                </ul>
-            </div>
-            `
-    
-        cards.insertAdjacentHTML('beforeend', html)
-}
-
+  
+    // --- 必要な部分だけ更新 ---
+    card.querySelector('.city').textContent    = data.name;
+    card.querySelector('.weather').textContent = data.weather?.[0]?.main ?? '';
+    card.querySelector('.temp').textContent    = `${data.main?.temp ?? ''}℃`;
+    card.querySelector('.wind').textContent    = `${(data.wind?.speed ?? 0).toFixed?.(1) ?? data.wind?.speed ?? ''}M`;
+    card.querySelector('.sunrise').textContent = formatTime(data.sys.sunrise);
+    card.querySelector('.sunset').textContent  = formatTime(data.sys.sunset);
+  
+    const iconEl = card.querySelector('.icon');
+    if (iconEl) {
+      iconEl.src = `https://openweathermap.org/img/w/${data.weather?.[0]?.icon}.png`; // ← https
+      iconEl.alt = data.weather?.[0]?.description || data.weather?.[0]?.main || 'weather';
+    }
+  }
+  
   // 東京などの最後に検索した地名を使う場合は getGeo() を呼ぶ
 // ここでは「現在地」ボタンを押したあとに最新の座標を使って更新する例
 let lastLatLng = null;
 
 
 let getWeather = function(latlng) {
+    lastLatLng = latlng;
+
     fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latlng[1]}&lon=${latlng[0]}&units=metric&appid=dbb8018c14b7dce1b5fdba7520951c60`)
     .then(response => {
         console.log(response)
@@ -72,21 +100,15 @@ let getWeather = function(latlng) {
         return response.json()
     })
     .then(data => {
-        // console.log(data)
 
-    
-        const getWeatherIcon = function(){
-            let icoWeather = document.getElementById('weatherImg01')
-            let iconurl = "http://openweathermap.org/img/w/" + data.weather[0].icon + ".png";
-            icoWeather.src = iconurl
-        }
 
-        renderCard(data)
+        const lon = latlng[0];
+        const lat = latlng[1];
+        const key = coordKey(lon, lat);   // 一意キー作成
+        renderCard(key, data);            // 既存カードがあれば更新、なければ追加
         
-    
         
-        // setTimeout(getWeatherIcon(), 0) //この処理をスレッドの一番最後に持ってくる場合
-        getWeatherIcon()
+
         cards.style.opacity = 1;
     })
     .catch(err => {
@@ -99,12 +121,7 @@ let getWeather = function(latlng) {
     }) 
 }
 
-// getWeather の直前で記録（getWeather の最初の行に置いてもOK）
-const _origGetWeather = getWeather;
-getWeather = function(latlng) {
-  lastLatLng = latlng;
-  return _origGetWeather(latlng);
-};
+
 
 
 const getGeo = function(geo) {
@@ -155,7 +172,7 @@ document.getElementById('currentBtn').addEventListener('click', (e) => {
 
 // 30分ごとに再取得
 setInterval(() => {
-    console.log("動作");
+    console.log("せtInterval関数が作動");
   if (lastLatLng) getWeather(lastLatLng);
 }, 10 * 1000);
 
