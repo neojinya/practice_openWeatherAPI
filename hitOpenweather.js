@@ -115,3 +115,26 @@ document.getElementById('submitBtn').addEventListener('click', (e) => {
     const geoValue = document.getElementById('geo').value
     getGeo(geoValue);
 })
+
+document.getElementById('currentBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!navigator.geolocation) {
+      renderError('このブラウザは位置情報に未対応です');
+      return;
+    }
+    cards.style.opacity = 0.5;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // 既存の getWeather は [lon, lat] 順の配列を期待している
+        getWeather([lon, lat]);
+      },
+      (err) => {
+        renderError(`位置情報エラー: ${err.message}`);
+        cards.style.opacity = 1;
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+  
