@@ -28,6 +28,14 @@ function coordKey(lon, lat) {
   
 
 const cards = document.querySelector('.cards_wrap')
+// カード削除（イベント委譲）
+cards.addEventListener('click', (e) => {
+  const btn = e.target.closest('.card__close');
+  if (!btn) return;
+  const card = btn.closest('.card');
+  if (card) card.remove();
+});
+
 
 const renderError = function(err){
     cards.insertAdjacentHTML('beforeend', err)
@@ -42,7 +50,7 @@ function renderCard(key, data) {
       // --- 新規作成（最小の骨組みだけ） ---
       const html = `
         <div class="card" data-key="${key}">
-        <button class="close-btn">×</button>
+          <button class="card__close" aria-label="カードを削除">×</button>
           <div class="card__title city"></div>
           <ul class="card__list">
             <li class="card__list__item">
@@ -67,6 +75,7 @@ function renderCard(key, data) {
             </li>
           </ul>
         </div>`;
+
       cards.insertAdjacentHTML('beforeend', html);
       card = document.querySelector(`.card[data-key="${key}"]`);
     }
@@ -84,7 +93,7 @@ function renderCard(key, data) {
       iconEl.src = `https://openweathermap.org/img/w/${data.weather?.[0]?.icon}.png`; // ← https
       iconEl.alt = data.weather?.[0]?.description || data.weather?.[0]?.main || 'weather';
     }
-    card.querySelector('.close-btn').onclick = () => card.remove();
+    card.querySelector('.card__close').onclick = () => card.remove();
 
   }
   

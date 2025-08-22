@@ -77,6 +77,24 @@ body {
         }
       }
     }
+    position: relative;
+
+    .card__close {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      border: none;
+      background: #eee;
+      font-size: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 12px;
+      cursor: pointer;
+  
+      &:hover {
+        background: #ddd;
+      }
+    }
   }
 }
 

@@ -24,6 +24,7 @@ body {
   gap: 1rem 0;
   padding: 1rem;
   transition: transform 0.2s ease;
+  position: relative;
 }
 .cards_wrap .card:hover {
   transform: translateY(-4px);
@@ -63,6 +64,21 @@ body {
 }
 .cards_wrap .card__list__item .data {
   grid-column: 5/8;
+}
+.cards_wrap .card .card__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: #eee;
+  font-size: 14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.cards_wrap .card .card__close:hover {
+  background: #ddd;
 }
 
 form {
